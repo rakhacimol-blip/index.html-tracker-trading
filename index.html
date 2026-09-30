@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMC Trading Learning Tracker</title>
+<style>
+:root{
+  --bg:#0b1020;--card:#121a2d;--card2:#17213a;--text:#eef3ff;--muted:#9ba8c7;
+  --line:#283552;--blue:#5b8cff;--green:#31d69a;--red:#ff667d;--yellow:#ffc857;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:linear-gradient(135deg,#080c18,#101a31);color:var(--text)}
+.container{max-width:1200px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:22px}
+h1,h2,h3{margin:0 0 8px} h1{font-size:clamp(25px,4vw,42px)}
+p{color:var(--muted);line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:1.3fr .7fr;gap:16px}
+.card{background:rgba(18,26,45,.94);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 12px 30px #0004}
+.stat{font-size:28px;font-weight:800}.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.progress{height:13px;background:#202b46;border-radius:99px;overflow:hidden;margin:12px 0}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:.3s}
+.tabs{display:flex;gap:8px;overflow:auto;margin:18px 0}
+button,.btn{border:0;border-radius:10px;padding:10px 14px;background:#202c48;color:var(--text);cursor:pointer;font-weight:700}
+button:hover,.btn:hover{filter:brightness(1.15)}
+button.active{background:var(--blue)}
+button.danger{background:#552332;color:#ffdbe1}
+button.green{background:#15543f}
+section{display:none}.active-section{display:block}
+.checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.check{background:var(--card2);padding:12px;border:1px solid var(--line);border-radius:12px;display:flex;gap:10px;align-items:flex-start}
+input[type=checkbox]{accent-color:var(--green);width:19px;height:19px;margin-top:2px}
+input,select,textarea{width:100%;background:#0d1528;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;outline:none}
+textarea{min-height:100px;resize:vertical}
+.form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.full{grid-column:1/-1}
+table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{color:var(--muted)}
+.pill{display:inline-block;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:800}.win{background:#123f32;color:#65f0bb}.loss{background:#4a1f2a;color:#ff8fa0}.be{background:#443a17;color:#ffd96a}
+.score{font-size:50px;font-weight:900;text-align:center}.center{text-align:center}
+.small{font-size:13px;color:var(--muted)}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{min-height:72px;background:#111a2d;border:1px solid var(--line);border-radius:9px;padding:7px;font-size:12px}.day.done{border-color:var(--green);box-shadow:inset 0 0 0 1px #31d69a55}.day .num{font-weight:800}
+.badge{padding:7px 10px;border-radius:10px;background:#17233d;color:#9fb5ef;display:inline-block}
+footer{text-align:center;color:var(--muted);padding:25px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.checklist,.form{grid-template-columns:1fr}}
+@media(max-width:500px){.container{padding:13px}.grid{grid-template-columns:1fr}.calendar{gap:3px}.day{min-height:60px;padding:4px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div>
+    <div class="badge">SMC • 1 MONTH LEARNING TRACKER</div>
+    <h1>Trading SMC Evaluation</h1>
+    <p>Fokus: membangun skill sebelum mempertimbangkan akun real. Target evaluasi: November.</p>
+  </div>
+  <button class="danger" onclick="resetAll()">Reset Data</button>
+</header>
+
+<div class="grid">
+  <div class="card"><div class="label">Progress Belajar</div><div class="stat" id="progress">0%</div><div class="progress"><div class="bar" id="progressBar"></div></div></div>
+  <div class="card"><div class="label">Hari Aktif</div><div class="stat" id="activeDays">0/30</div></div>
+  <div class="card"><div class="label">Jurnal</div><div class="stat" id="journalCount">0</div></div>
+  <div class="card"><div class="label">Win Rate</div><div class="stat" id="winRate">0%</div></div>
+</div>
+
+<div class="tabs">
+<button class="active" onclick="showTab('dashboard',this)">Dashboard</button>
+<button onclick="showTab('daily',this)">Daily Checklist</button>
+<button onclick="showTab('journal',this)">Jurnal Trading</button>
+<button onclick="showTab('evaluation',this)">Evaluasi</button>
+</div>
+
+<section id="dashboard" class="active-section">
+<div class="grid2">
+<div class="card">
+<h2>Roadmap SMC 30 Hari</h2>
+<p>Progress dihitung dari checklist konsep dan evaluasi harian.</p>
+<div class="calendar" id="calendar"></div>
+</div>
+<div class="card">
+<h2>Komponen SMC</h2>
+<div id="conceptProgress"></div>
+</div>
+</div>
+</section>
+
+<section id="daily">
+<div class="card">
+<h2>Daily SMC Checklist</h2>
+<p>Pilih materi yang benar-benar lo pelajari/praktikkan hari ini. Jangan dicentang kalau cuma baca sekilas.</p>
+<div class="form">
+<div><label>Tanggal</label><input type="date" id="dailyDate"></div>
+<div><label>Pair / Market</label><input id="dailyMarket" placeholder="Contoh: XAUUSD"></div>
+</div>
+<br>
+<div class="checklist" id="checklist"></div>
+<br>
+<div class="form">
+<div class="full"><label>Catatan belajar</label><textarea id="dailyNote" placeholder="Apa yang lo pahami hari ini? Apa yang masih bikin bingung?"></textarea></div>
+</div>
+<br>
+<button class="green" onclick="saveDaily()">Simpan Evaluasi Hari Ini</button>
+</div>
+</section>
+
+<section id="journal">
+<div class="card">
+<h2>Jurnal Trading / Backtest</h2>
+<p>Gunakan terutama untuk backtest atau paper trading selama masa belajar.</p>
+<div class="form">
+<div><label>Tanggal</label><input type="date" id="jDate"></div>
+<div><label>Pair</label><input id="jPair" placeholder="XAUUSD"></div>
+<div><label>Timeframe</label><input id="jTf" placeholder="H4 / H1 / M15 / M5"></div>
+<div><label>Setup</label>
+<select id="jSetup"><option>Support / Resistance</option><option>BOS</option><option>MSS</option><option>FVG</option><option>Order Block</option><option>Liquidity + Structure</option><option>Multi-confluence</option></select></div>
+<div><label>Hasil</label>
+<select id="jResult"><option>WIN</option><option>LOSS</option><option>BE</option></select></div>
+<div><label>Risk : Reward</label><input id="jRR" placeholder="Contoh: 1:2"></div>
+<div class="full"><label>Alasan Entry / Analisis</label><textarea id="jReason" placeholder="Contoh: HTF bearish, terbentuk LH-LL, MSS bearish di M15, retrace ke OB + FVG..."></textarea></div>
+</div>
+<br><button class="green" onclick="saveJournal()">Tambah Jurnal</button>
+<table><thead><tr><th>Tanggal</th><th>Pair</th><th>Setup</th><th>Hasil</th><th>RR</th><th>Hapus</th></tr></thead><tbody id="journalTable"></tbody></table>
+</div>
+</section>
+
+<section id="evaluation">
+<div class="grid2">
+<div class="card">
+<h2>Evaluasi Akhir</h2>
+<p>Nilai diri sendiri secara objektif. Skor bukan rekomendasi untuk masuk akun real; ini hanya alat evaluasi disiplin dan penguasaan materi.</p>
+<div class="checklist" id="evalChecklist"></div>
+<br>
+<label>Catatan kesalahan terbesar</label><textarea id="finalNote" placeholder="Contoh: terlalu cepat entry, tidak menunggu MSS, salah menentukan swing..."></textarea>
+<br><br><button class="green" onclick="saveEvaluation()">Simpan Evaluasi</button>
+</div>
+<div class="card center">
+<h2>Readiness</h2>
+<div class="score" id="readiness">0%</div>
+<div class="progress"><div class="bar" id="readyBar"></div></div>
+<p id="readinessText">Belum ada data evaluasi.</p>
+<p class="small">Gunakan hasil ini untuk menentukan area yang masih perlu dilatih dan dibahas dengan mentor/sumber belajar. Jangan jadikan persentase sebagai jaminan profit.</p>
+</div>
+</div>
+</section>
+
+<footer>SMC Learning Tracker • Data tersimpan otomatis di browser (localStorage).</footer>
+</div>
+
+<script>
+const concepts = [
+["sr","Support & Resistance","Menentukan area support/resistance yang valid"],
+["swing","Swing High / Swing Low","Mengidentifikasi titik swing dengan konsisten"],
+["structure","HH / HL / LH / LL","Membaca struktur bullish dan bearish"],
+["bos","BOS","Memahami break of structure dan konteksnya"],
+["mss","MSS","Memahami market structure shift"],
+["fvg","Fair Value Gap","Menandai imbalance/FVG dan konteksnya"],
+["ob","Order Block","Menentukan OB dan validasinya"],
+["liquidity","Liquidity","Memahami liquidity sweep/area liquidity"],
+["multi","Multi-Timeframe","Menghubungkan HTF dengan entry timeframe"],
+["risk","Risk Management","Menentukan SL, TP dan risk sebelum entry"]
+];
+const evals=[
+["e1","Saya bisa menentukan trend/market structure tanpa menebak."],
+["e2","Saya bisa membedakan HH-HL dengan LH-LL."],
+["e3","Saya memahami perbedaan BOS dan MSS."],
+["e4","Saya bisa mencari FVG dan menjelaskan kenapa area itu relevan."],
+["e5","Saya bisa menentukan Order Block dengan alasan yang jelas."],
+["e6","Saya bisa menandai Support & Resistance berdasarkan price action."],
+["e7","Saya tidak entry hanya karena satu indikator/konsep."],
+["e8","Saya selalu menentukan invalidation/SL sebelum entry."],
+["e9","Saya mencatat hasil backtest/paper trading."],
+["e10","Saya bisa menjelaskan alasan entry dalam jurnal tanpa hindsight."]
+];
+
+let data=JSON.parse(localStorage.getItem("smcTracker")||'{"days":{},"journals":[],"evaluation":{}}');
+
+function today(){return new Date().toISOString().slice(0,10)}
+document.getElementById("dailyDate").value=today();
+document.getElementById("jDate").value=today();
+
+function save(){localStorage.setItem("smcTracker",JSON.stringify(data));updateAll()}
+
+function showTab(id,btn){
+ document.querySelectorAll("section").forEach(x=>x.classList.remove("active-section"));
+ document.getElementById(id).classList.add("active-section");
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+ btn.classList.add("active");
+}
+
+function renderChecklist(){
+ const box=document.getElementById("checklist");
+ box.innerHTML=concepts.map(([id,name,desc])=>`<label class="check"><input type="checkbox" id="c_${id}"><span><b>${name}</b><br><span class="small">${desc}</span></span></label>`).join("");
+}
+function loadDay(){
+ const d=document.getElementById("dailyDate").value;
+ const x=data.days[d]||{};
+ concepts.forEach(([id])=>document.getElementById("c_"+id).checked=!!x[id]);
+ document.getElementById("dailyMarket").value=x.market||"";
+ document.getElementById("dailyNote").value=x.note||"";
+}
+document.getElementById("dailyDate").addEventListener("change",loadDay);
+
+function saveDaily(){
+ const d=document.getElementById("dailyDate").value;
+ let x={market:document.getElementById("dailyMarket").value,note:document.getElementById("dailyNote").value};
+ concepts.forEach(([id])=>x[id]=document.getElementById("c_"+id).checked);
+ data.days[d]=x;save();alert("Evaluasi harian tersimpan.");
+}
+
+function saveJournal(){
+ const j={
+  date:document.getElementById("jDate").value,pair:document.getElementById("jPair").value||"-",
+  tf:document.getElementById("jTf").value||"-",setup:document.getElementById("jSetup").value,
+  result:document.getElementById("jResult").value,rr:document.getElementById("jRR").value||"-",
+  reason:document.getElementById("jReason").value
+ };
+ data.journals.push(j);save();
+ ["jPair","jTf","jRR","jReason"].forEach(id=>document.getElementById(id).value="");
+ alert("Jurnal ditambahkan.");
+}
+
+function renderJournal(){
+ const t=document.getElementById("journalTable");
+ t.innerHTML=data.journals.map((j,i)=>`<tr><td>${j.date}</td><td>${j.pair}<br><span class="small">${j.tf}</span></td><td>${j.setup}</td><td><span class="pill ${j.result==="WIN"?"win":j.result==="LOSS"?"loss":"be"}">${j.result}</span></td><td>${j.rr}</td><td><button class="danger" onclick="deleteJournal(${i})">X</button></td></tr>`).join("");
+}
+function deleteJournal(i){data.journals.splice(i,1);save()}
+
+function renderEvaluation(){
+ const box=document.getElementById("evalChecklist");
+ box.innerHTML=evals.map(([id,text])=>`<label class="check"><input type="checkbox" id="eval_${id}" ${data.evaluation[id]?"checked":""} onchange="saveEvalBox('${id}')"><span>${text}</span></label>`).join("");
+ document.getElementById("finalNote").value=data.evaluation.note||"";
+}
+function saveEvalBox(id){data.evaluation[id]=document.getElementById("eval_"+id).checked;save()}
+function saveEvaluation(){data.evaluation.note=document.getElementById("finalNote").value;save();alert("Evaluasi akhir tersimpan.")}
+
+function calcProgress(){
+ const days=Object.values(data.days);
+ let total=days.length*concepts.length,done=0;
+ days.forEach(d=>concepts.forEach(([id])=>{if(d[id])done++}));
+ return total?Math.round(done/total*100):0;
+}
+function calcReady(){
+ let done=evals.filter(([id])=>data.evaluation[id]).length;
+ return Math.round(done/evals.length*100);
+}
+function updateAll(){
+ const p=calcProgress();
+ document.getElementById("progress").textContent=p+"%";
+ document.getElementById("progressBar").style.width=p+"%";
+ const active=Object.keys(data.days).filter(d=>Object.values(data.days[d]).some(v=>v===true)).length;
+ document.getElementById("activeDays").textContent=active+"/30";
+ document.getElementById("journalCount").textContent=data.journals.length;
+ const wins=data.journals.filter(x=>x.result==="WIN").length;
+ const counted=data.journals.filter(x=>x.result==="WIN"||x.result==="LOSS").length;
+ document.getElementById("winRate").textContent=(counted?Math.round(wins/counted*100):0)+"%";
+ document.getElementById("readiness").textContent=calcReady()+"%";
+ document.getElementById("readyBar").style.width=calcReady()+"%";
+ document.getElementById("readinessText").textContent=calcReady()===100?"Semua checklist evaluasi selesai.":"Masih ada "+(evals.length-evals.filter(([id])=>data.evaluation[id]).length)+" poin evaluasi.";
+ renderCalendar();renderConceptProgress();renderJournal();
+}
+
+function renderConceptProgress(){
+ const el=document.getElementById("conceptProgress");
+ el.innerHTML=concepts.map(([id,name])=>{
+  let total=Object.keys(data.days).length,done=Object.values(data.days).filter(d=>d[id]).length;
+  let p=total?Math.round(done/total*100):0;
+  return `<div style="margin:10px 0"><div style="display:flex;justify-content:space-between"><span>${name}</span><b>${p}%</b></div><div class="progress"><div class="bar" style="width:${p}%"></div></div></div>`;
+ }).join("");
+}
+function renderCalendar(){
+ const el=document.getElementById("calendar");
+ const now=new Date(),year=now.getFullYear(),month=now.getMonth();
+ let days=new Date(year,month+1,0).getDate();
+ let html="";
+ for(let d=1;d<=days;d++){
+  let key=`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  let x=data.days[key];let done=x&&concepts.some(([id])=>x[id]);
+  html+=`<div class="day ${done?"done":""}"><div class="num">${d}</div><div>${done?"✓ Belajar":"—"}</div></div>`;
+ }
+ el.innerHTML=html;
+}
+function resetAll(){
+ if(confirm("Yakin hapus semua progress, jurnal, dan evaluasi?")){
+  localStorage.removeItem("smcTracker");location.reload();
+ }
+}
+
+renderChecklist();renderEvaluation();loadDay();updateAll();
+</script>
+</body>
+</html>
